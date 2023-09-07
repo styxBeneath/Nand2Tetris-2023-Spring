@@ -1,0 +1,150 @@
+// This file is part of www.nand2tetris.org
+// and the book "The Elements of Computing Systems"
+// by Nisan and Schocken, MIT Press.
+// File name: projects/12/Math.jack
+
+/**
+ * A library of commonly used mathematical functions.
+ * Note: Jack compilers implement multiplication and division using OS method calls.
+ */
+class Math {
+    static int   blockLength;
+    static Array pot; //powers of two
+
+    /** Initializes the library. */
+    function void init() {
+        var int pow;
+        var int i;
+        let pow = 1;
+        let i = 0;
+
+        let blockLength = 16;
+        let pot = Array.new(blockLength);
+
+        while (i < blockLength) {
+            let pot[i] = pow;
+            let pow = pow + pow;
+            let i = i + 1;
+        }
+        return;
+    }
+
+    /** Returns the absolute value of x. */
+    function int abs(int x) {
+        if (x < 0) {
+            let x = -x;
+        }
+        return x;
+    }
+
+    /** Returns the product of x and res. 
+     *  When a Jack compiler detects the multiplication operator '*' in the 
+     *  program's code, it handles it by invoking this method. In other words,
+     *  the Jack expressions x*res and multiply(x,res) return the same value.
+     */
+    function int multiply(int x, int res) {
+        var int res;
+        var int i;
+        let res = 0;
+        let i = 0;
+
+        while (i < blockLength) {
+            if (res & pot[i]) {
+                let res = res + x;
+            }
+            let x = x + x;
+            let i = i + 1;
+        }
+
+        return res;
+    }
+
+    /** Returns the integer part of x/res.
+     *  When a Jack compiler detects the multiplication operator '/' in the 
+     *  program's code, it handles it by invoking this method. In other words,
+     *  the Jack expressions x/res and divide(x,res) return the same value.
+     */
+    function int divide(int x, int res) {
+        var int division;
+        var int sign;
+
+        if (res = 0) {
+            do Sys.error(3);
+        }
+        
+        let division = Math.recursiveDivide(Math.abs(x), Math.abs(res));
+        let sign = Math.multSign(x, res);
+
+        return Math.multiply(sign, division);
+    }
+
+    function int recursiveDivide(int x, int res) {
+        var int q;
+        
+        if ((res < 0) | (res > x)) {
+            return 0;
+        }
+        
+        let q = Math.recursiveDivide(x, res + res);
+        
+        if ((x - Math.multiply(2, Math.multiply(q, res))) < res) {
+            return q + q;
+        } else {
+            return q + q + 1;
+        }
+    }
+
+    function int multSign(int x, int res) {
+        if (((x > 0) & (res > 0)) | ((x < 0) & (res < 0))) {
+            return 1;
+        } else {
+            return -1;
+        }
+    }
+
+    /** Returns the integer part of the square root of x. */
+    function int sqrt(int x) {
+        var int res;
+        var int nextRes;
+        var int sqRes;
+        var int i;
+
+        if (x < 0) {
+            do Sys.error(4);
+        }
+
+        let i = Math.divide(blockLength, 2) - 1;
+        let res = 0;
+
+        while (i > -1) {
+            let nextRes = res + pot[i];
+            let sqRes = Math.multiply(nextRes, nextRes);
+            
+            if ((sqRes > 0) & ((sqRes < x) | (sqRes = x))) {
+                let res = nextRes;
+            }
+
+            let i = i - 1;
+        }
+
+        return res;
+    }
+
+    /** Returns the greater number. */
+    function int max(int a, int b) {
+        if (a > b) {
+            return a;
+        } else {
+            return b;
+        }
+    }
+
+    /** Returns the smaller number. */
+    function int min(int a, int b) {
+        if (a > b) {
+            return b;
+        } else {
+            return a;
+        }
+    }
+}

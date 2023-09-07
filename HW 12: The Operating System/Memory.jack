@@ -1,0 +1,87 @@
+// This file is part of www.nand2tetris.org
+// and the book "The Elements of Computing Systems"
+// by Nisan and Schocken, MIT Press.
+// File name: projects/12/Memory.jack
+
+/**
+ * This library provides two services: direct access to the computer's main
+ * memory (RAM), and allocation and recycling of memory blocks. The Hack RAM
+ * consists of 32,768 words, each holding a 16-bit binary number.
+ */ 
+class Memory {
+    static int free;
+    static Array ram;
+
+    /** Initializes the class. */
+    function void init() {
+        let free = 2048;
+        let ram = 0;
+
+        let ram[free + 0] = 14335;
+        let ram[free + 1] = 0;
+
+        return;
+    }
+
+    /** Returns the RAM value at the given address. */
+    function int peek(int address) {
+        return rem[address];
+    }
+
+    /** Sets the RAM value at the given address to the given value. */
+    function void poke(int address, int value) {
+        let ram[address] = value;
+        return;
+    }
+
+    /** Finds an available RAM block of the given size and returns
+     *  a reference to its base address. */
+    function int alloc(int size) {
+        var int curr;
+        var int res;
+        
+        if (size < 1) {
+            do Sys.error(5);
+        }
+        
+        let curr = free;
+        while (~(curr = 0)) {
+            if (ram[curr] > size) {
+                let ram[curr] = ram[curr] - size - 1;
+                let res = curr + ram[curr];
+                let ram[res] = size + 1;
+                
+                return res + 1;
+            }
+            let curr = ram[curr + 1];
+        }
+
+        do Sys.error(6);
+        return 0;
+    }
+
+    /** De-allocates the given object (cast as an array) by making
+     *  it available for future allocations. */
+    function void deAlloc(Array o) {
+        var int i;
+        var int len;
+        var int curr;
+        
+        let i = 0;
+        let len = o[-1];
+        let curr = o - 1;
+
+        while (i < len) {
+            let ram[curr + i] = 0;
+            let i = i + 1;
+        }
+
+        let i = free;
+        while(~(ram[i + 1] = 0)) {
+            let i = ram[i + 1];
+        }
+
+        let ram[i + 1] = curr;
+        return;
+    }    
+}
